@@ -4,7 +4,7 @@ A full-stack e-commerce platform for Janelux Beads — mobile-first, SEO-optimiz
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Frontend:** React 18 + Vite, TailwindCSS
 - **Backend:** Node.js + Express
@@ -15,7 +15,7 @@ A full-stack e-commerce platform for Janelux Beads — mobile-first, SEO-optimiz
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 janelux-beads/
@@ -27,7 +27,7 @@ janelux-beads/
 
 ---
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
 - Node.js v18+
@@ -127,7 +127,7 @@ This creates the default admin (only works once):
 
 ---
 
-## 📦 Features
+##  Features
 
 ### Customer
 - Browse products by category
@@ -150,7 +150,7 @@ This creates the default admin (only works once):
 
 ---
 
-## 🌍 SEO
+##  SEO
 
 - Dynamic meta tags per page
 - Structured JSON-LD for products
@@ -159,7 +159,7 @@ This creates the default admin (only works once):
 
 ---
 
-## 📧 Email Templates
+##  Email Templates
 
 Located in `server/emails/`. Styled to match Janelux Beads brand:
 - OTP Verification
@@ -170,7 +170,7 @@ Located in `server/emails/`. Styled to match Janelux Beads brand:
 
 ---
 
-## 💳 Paystack Integration
+##  Paystack Integration
 
 Handles NGN payments. Test cards:
 - Card: `4084 0840 8408 4081`
@@ -181,7 +181,7 @@ Handles NGN payments. Test cards:
 
 ---
 
-## 🖼 Image Upload
+##  Image Upload
 
 Images are automatically compressed using Sharp:
 - Max dimensions: 1200×1200px
@@ -191,7 +191,7 @@ Images are automatically compressed using Sharp:
 
 ---
 
-## 📱 Social Links
+##  Social Links
 
 - Instagram: https://www.instagram.com/janeluxbeads
 - TikTok: https://www.tiktok.com/@janelux_beads
