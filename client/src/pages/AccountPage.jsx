@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Icons } from '../components/common/Icons';
 import { useAuth } from '../context/AuthContext';
@@ -14,8 +14,11 @@ export function AccountPage() {
   const [tab, setTab] = useState('orders');
   const [profile, setProfile] = useState({ full_name: user?.full_name || '', phone: '' });
 
+  // Admins should never land here — redirect straight to admin panel
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+
   useEffect(() => {
-    api.get('/orders/my').then(res => setOrders(res.data.orders || [])).catch(() => {}).finally(() => setLoading(false));
+    api.get('/orders/my').then(res => setOrders(res.data.orders || [])).catch(() => { }).finally(() => setLoading(false));
   }, []);
 
   const saveProfile = async (e) => {
@@ -60,38 +63,38 @@ export function AccountPage() {
           <div className="md:col-span-3">
             {tab === 'orders' && (
               loading ? <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="shimmer h-24" />)}</div> :
-              orders.length === 0 ? (
-                <div className="text-center py-16">
-                  <Icons.Package size={48} className="text-cream/10 mx-auto mb-4" />
-                  <p className="text-cream/30 text-sm">No orders yet</p>
-                  <Link to="/shop" className="btn-outline mt-4 inline-block">Shop Now</Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {orders.map(order => (
-                    <div key={order.id} className="bg-obsidian-light border border-obsidian-border p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="font-sans text-sm text-cream font-semibold">#{order.order_number}</p>
-                          <p className="text-cream/40 text-xs">{new Date(order.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className={`text-xs uppercase tracking-widest ${statusColor[order.status] || 'text-cream/50'}`}>{order.status}</span>
-                          <p className="text-cream font-semibold text-sm mt-0.5">{formatPrice(order.total)}</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 overflow-x-auto">
-                        {order.items?.slice(0, 4).map(item => (
-                          <div key={item.id} className="w-12 h-12 shrink-0 bg-obsidian overflow-hidden">
-                            {item.product_image && <img src={getImageUrl(item.product_image)} alt={item.product_name} className="w-full h-full object-cover" />}
+                orders.length === 0 ? (
+                  <div className="text-center py-16">
+                    <Icons.Package size={48} className="text-cream/10 mx-auto mb-4" />
+                    <p className="text-cream/30 text-sm">No orders yet</p>
+                    <Link to="/shop" className="btn-outline mt-4 inline-block">Shop Now</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map(order => (
+                      <div key={order.id} className="bg-obsidian-light border border-obsidian-border p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="font-sans text-sm text-cream font-semibold">#{order.order_number}</p>
+                            <p className="text-cream/40 text-xs">{new Date(order.created_at).toLocaleDateString()}</p>
                           </div>
-                        ))}
-                        {order.items?.length > 4 && <div className="w-12 h-12 shrink-0 bg-obsidian flex items-center justify-center text-cream/30 text-xs">+{order.items.length - 4}</div>}
+                          <div className="text-right">
+                            <span className={`text-xs uppercase tracking-widest ${statusColor[order.status] || 'text-cream/50'}`}>{order.status}</span>
+                            <p className="text-cream font-semibold text-sm mt-0.5">{formatPrice(order.total)}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto">
+                          {order.items?.slice(0, 4).map(item => (
+                            <div key={item.id} className="w-12 h-12 shrink-0 bg-obsidian overflow-hidden">
+                              {item.product_image && <img src={getImageUrl(item.product_image)} alt={item.product_name} className="w-full h-full object-cover" />}
+                            </div>
+                          ))}
+                          {order.items?.length > 4 && <div className="w-12 h-12 shrink-0 bg-obsidian flex items-center justify-center text-cream/30 text-xs">+{order.items.length - 4}</div>}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )
+                    ))}
+                  </div>
+                )
             )}
 
             {tab === 'profile' && (
@@ -126,7 +129,7 @@ function WishlistTab() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/wishlist').then(res => setItems(res.data.items || [])).catch(() => {}).finally(() => setLoading(false));
+    api.get('/wishlist').then(res => setItems(res.data.items || [])).catch(() => { }).finally(() => setLoading(false));
   }, []);
 
   const remove = async (productId) => {

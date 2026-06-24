@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -21,20 +21,18 @@ const NAV_RIGHT = [
 
 const NAV_ALL = [...NAV_LEFT, ...NAV_RIGHT];
 
-// Better shopping bag icon (like the reference site)
 const BagIcon = ({ size = 22, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <path d="M16 10a4 4 0 01-8 0"/>
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <path d="M16 10a4 4 0 01-8 0" />
   </svg>
 );
 
-// Clean search icon matching reference
 const SearchIcon = ({ size = 18, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className={className}>
-    <circle cx="10.5" cy="10.5" r="6.5"/>
-    <path d="M15.5 15.5L21 21"/>
+    <circle cx="10.5" cy="10.5" r="6.5" />
+    <path d="M15.5 15.5L21 21" />
   </svg>
 );
 
@@ -46,14 +44,17 @@ export default function Header() {
   const { user, logout } = useAuth();
   const location = useLocation();
 
+  // Close mobile menu on route change
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
+  // Scroll shadow effect
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Lock body scroll when mobile menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -62,23 +63,26 @@ export default function Header() {
   const isActive = (href) =>
     href === '/' ? location.pathname === '/' : location.pathname.startsWith(href);
 
+  // Admin users always go to /admin, regular users go to /account
+  const accountHref = user?.role === 'admin' ? '/admin' : '/account';
+
   return (
     <>
       {/* Announcement bar */}
       <div className="announcement-bar">
         <div className="overflow-hidden whitespace-nowrap">
           <span className="inline-block animate-marquee">
-            Free shipping on orders over ₦50,000 &nbsp;·&nbsp; New Collection Available — Shop Now &nbsp;·&nbsp; Handcrafted with Love in Nigeria 🇳🇬 &nbsp;·&nbsp; Free shipping on orders over ₦50,000 &nbsp;·&nbsp; New Collection Available — Shop Now &nbsp;·&nbsp; Handcrafted with Love in Nigeria 🇳🇬 &nbsp;·&nbsp;
+            Free shipping on orders over &#8358;500,000 &nbsp;&middot;&nbsp; New Collection Available &mdash; Shop Now &nbsp;&middot;&nbsp; Handcrafted with Love in Nigeria &#127475;&#127468; &nbsp;&middot;&nbsp; Free shipping on orders over &#8358;500,000 &nbsp;&middot;&nbsp; New Collection Available &mdash; Shop Now &nbsp;&middot;&nbsp; Handcrafted with Love in Nigeria &#127475;&#127468; &nbsp;&middot;&nbsp;
           </span>
         </div>
       </div>
 
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-obsidian/95 backdrop-blur-md border-b border-obsidian-border shadow-xl shadow-black/50' : 'bg-obsidian border-b border-obsidian-border'}`}>
 
-        {/* ── DESKTOP HEADER (lg and above) ── */}
+        {/* ── DESKTOP HEADER ── */}
         <div className="hidden lg:flex max-w-screen-xl mx-auto px-6 h-16 items-center justify-between gap-6">
 
-          {/* Left nav links */}
+          {/* Left nav */}
           <nav className="flex items-center gap-6">
             {NAV_LEFT.map(link => (
               <Link
@@ -97,7 +101,7 @@ export default function Header() {
             <span className="font-sans text-[9px] tracking-widest3 text-gold/80 uppercase leading-tight">BEADS</span>
           </Link>
 
-          {/* Right nav + actions */}
+          {/* Right nav + icons */}
           <div className="flex items-center gap-6">
             {NAV_RIGHT.map(link => (
               <Link
@@ -109,18 +113,26 @@ export default function Header() {
               </Link>
             ))}
 
-            {/* Divider */}
             <div className="w-px h-4 bg-obsidian-border" />
 
-            {/* Icons */}
             <div className="flex items-center gap-4">
+              {/* Search */}
               <button onClick={() => setSearchOpen(true)} className="text-cream/70 hover:text-gold transition-colors" aria-label="Search">
                 <SearchIcon size={18} />
               </button>
 
+              {/* Account / Admin — key change: admin goes straight to /admin */}
               {user ? (
-                <Link to="/account" className="text-cream/70 hover:text-gold transition-colors" aria-label="My Account">
+                <Link
+                  to={accountHref}
+                  className="text-cream/70 hover:text-gold transition-colors relative"
+                  aria-label={user.role === 'admin' ? 'Admin Panel' : 'My Account'}
+                  title={user.role === 'admin' ? 'Admin Panel' : 'My Account'}
+                >
                   <Icons.User size={18} />
+                  {user.role === 'admin' && (
+                    <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-gold rounded-full" />
+                  )}
                 </Link>
               ) : (
                 <Link to="/login" className="text-cream/70 hover:text-gold transition-colors" aria-label="Sign in">
@@ -128,10 +140,12 @@ export default function Header() {
                 </Link>
               )}
 
+              {/* Wishlist */}
               <Link to="/wishlist" className="text-cream/70 hover:text-gold transition-colors" aria-label="Wishlist">
                 <Icons.Heart size={18} />
               </Link>
 
+              {/* Cart */}
               <button
                 onClick={() => setCartOpen(true)}
                 className="relative text-cream/70 hover:text-gold transition-colors"
@@ -148,10 +162,9 @@ export default function Header() {
           </div>
         </div>
 
-        {/* ── MOBILE HEADER (below lg) ── */}
+        {/* ── MOBILE HEADER ── */}
         <div className="flex lg:hidden max-w-screen-xl mx-auto px-4 h-16 items-center justify-between gap-4">
 
-          {/* Hamburger */}
           <button
             onClick={() => setMenuOpen(true)}
             className="text-cream/80 hover:text-gold transition-colors p-1 -ml-1"
@@ -160,13 +173,11 @@ export default function Header() {
             <Icons.Menu size={24} />
           </button>
 
-          {/* Logo — centred */}
           <Link to="/" className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center group">
             <span className="font-display text-xl tracking-widest2 text-cream group-hover:text-gold transition-colors leading-none">JANELUX</span>
             <span className="font-sans text-[9px] tracking-widest3 text-gold/80 uppercase leading-tight">BEADS</span>
           </Link>
 
-          {/* Mobile right actions */}
           <div className="flex items-center gap-3">
             <button onClick={() => setSearchOpen(true)} className="text-cream/70 hover:text-gold transition-colors p-1" aria-label="Search">
               <SearchIcon size={19} />
@@ -187,10 +198,9 @@ export default function Header() {
         </div>
       </header>
 
-      {/* ── MOBILE FULLSCREEN MENU OVERLAY ── */}
+      {/* ── MOBILE FULLSCREEN MENU ── */}
       {menuOpen && (
         <div className="fixed inset-0 z-[100] bg-obsidian flex flex-col animate-fade-in lg:hidden">
-          {/* Top bar */}
           <div className="flex items-center justify-between px-6 h-16 border-b border-obsidian-border shrink-0">
             <Link to="/" onClick={() => setMenuOpen(false)} className="flex flex-col">
               <span className="font-display text-xl tracking-widest2 text-cream leading-none">JANELUX</span>
@@ -201,7 +211,6 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Nav links — bold fullscreen style */}
           <nav className="flex-1 overflow-y-auto px-6 pt-8 pb-4">
             <ul className="space-y-1">
               {NAV_ALL.map((link) => (
@@ -222,17 +231,19 @@ export default function Header() {
             <div className="flex flex-col gap-3">
               {user ? (
                 <>
-                  <Link to="/account" onClick={() => setMenuOpen(false)} className="nav-link flex items-center gap-2">
-                    <Icons.User size={14} /> My Account
-                  </Link>
-                  <Link to="/wishlist" onClick={() => setMenuOpen(false)} className="nav-link flex items-center gap-2">
-                    <Icons.Heart size={14} /> Wishlist
-                  </Link>
-                  {user.role === 'admin' && (
+                  {/* Admin gets a prominent admin panel link, regular users get account */}
+                  {user.role === 'admin' ? (
                     <Link to="/admin" onClick={() => setMenuOpen(false)} className="nav-link flex items-center gap-2 text-gold">
                       <Icons.Dashboard size={14} /> Admin Panel
                     </Link>
+                  ) : (
+                    <Link to="/account" onClick={() => setMenuOpen(false)} className="nav-link flex items-center gap-2">
+                      <Icons.User size={14} /> My Account
+                    </Link>
                   )}
+                  <Link to="/wishlist" onClick={() => setMenuOpen(false)} className="nav-link flex items-center gap-2">
+                    <Icons.Heart size={14} /> Wishlist
+                  </Link>
                   <button onClick={() => { logout(); setMenuOpen(false); }} className="nav-link flex items-center gap-2 text-left">
                     <Icons.LogOut size={14} /> Sign Out
                   </button>
