@@ -33,14 +33,7 @@ const HERO_SLIDES = [
   },
 ];
 
-const CATEGORIES = [
-  { name: 'Handbags', slug: 'handbags', icon: '👜', desc: 'Handcrafted bead totes, clutches & satchels' },
-  { name: 'Necklaces', slug: 'necklaces', icon: '📿', desc: 'Statement collar pieces & layered strands' },
-  { name: 'Bracelets', slug: 'bracelets', icon: '💫', desc: 'Stackable & statement wrist pieces' },
-  { name: 'Waist Beads', slug: 'waist-beads', icon: '✨', desc: 'Traditional & contemporary waist sets' },
-  { name: 'Earrings', slug: 'earrings', icon: '🌸', desc: 'Bold drops & delicate bead earrings' },
-  { name: 'Sets', slug: 'sets-collections', icon: '🎁', desc: 'Curated matching bead collections' },
-];
+
 
 function HeroCarousel() {
   const [current, setCurrent] = useState(0);
@@ -181,23 +174,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Categories */}
-      <section className="py-20 px-4 max-w-screen-xl mx-auto">
-        <div className="mb-10">
-          <span className="section-label">Explore</span>
-          <h2 className="section-title">SHOP BY CATEGORY</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {CATEGORIES.map((cat) => (
-            <Link key={cat.slug} to={`/shop/${cat.slug}`} className="group relative bg-obsidian-light border border-obsidian-border hover:border-gold/40 p-5 md:p-8 transition-all duration-300 hover:bg-obsidian-mid">
-              <div className="text-3xl mb-3">{cat.icon}</div>
-              <h3 className="font-display text-xl md:text-2xl tracking-wide text-cream group-hover:text-gold transition-colors">{cat.name.toUpperCase()}</h3>
-              <p className="text-cream/40 text-xs mt-1 font-sans leading-relaxed hidden md:block">{cat.desc}</p>
-              <Icons.ArrowRight size={14} className="text-gold/40 group-hover:text-gold group-hover:translate-x-1 transition-all mt-4" />
-            </Link>
-          ))}
-        </div>
-      </section>
+
 
       {/* Featured */}
       {(loading || featured.length > 0) && (
