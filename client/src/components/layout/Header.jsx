@@ -14,7 +14,6 @@ const NAV_LEFT = [
 ];
 
 const NAV_RIGHT = [
-  { label: 'Waist Beads', href: '/shop/waist-beads' },
   { label: 'About Us', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];

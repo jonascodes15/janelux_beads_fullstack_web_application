@@ -5,31 +5,38 @@ import { Icons } from '../components/common/Icons';
 import ProductCard from '../components/shop/ProductCard';
 import api from '../utils/api';
 
-// Hero slides — replace image URLs with real product images
+// ─────────────────────────────────────────────────────────────────
+// HERO SLIDES — add your hosted image URLs to the `image` field.
+// Leave `image` as empty string '' to use the dark gradient fallback.
+// Recommended image size: 1440×900px or wider, portrait/landscape OK.
+// ─────────────────────────────────────────────────────────────────
 const HERO_SLIDES = [
   {
+    image: '', // ← your image here
     title: 'WOVEN FROM\nHERITAGE',
     subtitle: 'Luxury bead handbags handcrafted in Nigeria',
     cta: 'Shop Handbags',
     href: '/shop/handbags',
-    bg: 'from-obsidian via-obsidian-mid to-obsidian-light',
     accent: 'Each piece tells a story of African artistry passed down through generations.',
+    overlay: 'from-obsidian/80 via-obsidian/50 to-transparent', // dark left-fade over image
   },
   {
+    image: '', // ← paste second slide image URL here (leave '' for gradient)
     title: 'ADORN\nYOURSELF',
     subtitle: 'Statement jewelry that celebrates who you are',
     cta: 'Shop Jewelry',
     href: '/shop/necklaces',
-    bg: 'from-[#1A0F00] via-obsidian to-obsidian',
     accent: 'Bold. Beautiful. Unapologetically African.',
+    overlay: 'from-obsidian/80 via-obsidian/50 to-transparent',
   },
   {
+    image: '', // ← paste third slide image URL here
     title: 'CUSTOM\nCREATIONS',
     subtitle: 'Bespoke pieces crafted to your exact vision',
     cta: 'Order Custom',
     href: '/shop/custom-orders',
-    bg: 'from-obsidian via-[#0F0A00] to-obsidian',
-    accent: 'Work directly with Esther to create your dream piece.',
+    accent: 'Work directly with our artisans to create your dream piece.',
+    overlay: 'from-obsidian/80 via-obsidian/50 to-transparent',
   },
 ];
 
@@ -55,11 +62,39 @@ function HeroCarousel() {
   }, [current]);
 
   const slide = HERO_SLIDES[current];
+  const prevSlide = HERO_SLIDES[(current - 1 + HERO_SLIDES.length) % HERO_SLIDES.length];
 
   return (
-    <section className={`relative bg-gradient-to-br ${slide.bg} min-h-[88vh] flex items-end overflow-hidden transition-all duration-700`}>
-      {/* Decorative bead pattern */}
-      <div className="absolute inset-0 opacity-5">
+    <section className="relative min-h-[88vh] flex items-end overflow-hidden bg-obsidian">
+
+      {/* ── Background: real image if provided, gradient fallback otherwise ── */}
+      {HERO_SLIDES.map((s, i) => (
+        <div
+          key={i}
+          className="absolute inset-0 transition-opacity duration-700"
+          style={{ opacity: i === current ? 1 : 0, zIndex: 0 }}
+        >
+          {s.image ? (
+            /* Real photo */
+            <img
+              src={s.image}
+              alt={s.title}
+              className="w-full h-full object-cover object-center"
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          ) : (
+            /* Gradient fallback when no image is set */
+            <div className="w-full h-full bg-gradient-to-br from-[#1A0F00] via-obsidian to-obsidian" />
+          )}
+          {/* Dark overlay so text is always readable over any photo */}
+          <div className={`absolute inset-0 bg-gradient-to-r ${s.overlay || 'from-obsidian/80 via-obsidian/50 to-transparent'}`} />
+          {/* Extra bottom fade so buttons are readable */}
+          <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-obsidian/80 to-transparent" />
+        </div>
+      ))}
+
+      {/* Decorative bead pattern — subtle on top of image */}
+      <div className="absolute inset-0 opacity-[0.04] z-[1] pointer-events-none">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="beads" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -74,23 +109,30 @@ function HeroCarousel() {
         </svg>
       </div>
 
-      {/* Gold line accent */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+      {/* Gold top line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent z-[2]" />
 
-      {/* Content */}
-      <div className={`relative z-10 px-6 pb-16 pt-24 max-w-screen-xl mx-auto w-full transition-all duration-500 ${animating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-        <span className="section-label">New Collection {new Date().getFullYear()}</span>
+      {/* ── Slide content — centred ── */}
+      <div
+        className={`relative z-10 flex flex-col items-center text-center px-6 pb-20 pt-24 w-full transition-all duration-500 ${animating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+          }`}
+      >
+        <span className="section-label justify-center">New Collection {new Date().getFullYear()}</span>
 
-        <h1 className="font-display text-[clamp(4rem,16vw,10rem)] leading-none tracking-wide text-cream whitespace-pre-line">
+        <h1 className="font-display text-[clamp(3rem,10vw,7rem)] leading-none tracking-wide text-cream whitespace-pre-line drop-shadow-lg max-w-3xl">
           {slide.title}
         </h1>
 
-        <div className="gold-divider" />
+        <div className="gold-divider self-center" />
 
-        <p className="font-serif italic text-cream/70 text-lg md:text-xl mb-2">{slide.subtitle}</p>
-        <p className="text-cream/40 text-sm mb-8 max-w-sm">{slide.accent}</p>
+        <p className="font-serif italic text-cream/80 text-base md:text-lg mb-2 drop-shadow max-w-md">
+          {slide.subtitle}
+        </p>
+        <p className="text-cream/50 text-sm mb-8 max-w-xs">
+          {slide.accent}
+        </p>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 justify-center">
           <Link to={slide.href} className="btn-gold flex items-center gap-2">
             {slide.cta} <Icons.ArrowRight size={16} />
           </Link>
@@ -100,25 +142,19 @@ function HeroCarousel() {
         </div>
       </div>
 
-      {/* Nav */}
-      <div className="absolute bottom-8 right-6 flex items-center gap-4 z-10">
-        <button onClick={prev} className="w-10 h-10 border border-cream/20 hover:border-gold flex items-center justify-center text-cream/60 hover:text-gold transition-all">
-          <Icons.ChevronLeft size={18} />
-        </button>
-        <div className="flex gap-1.5">
-          {HERO_SLIDES.map((_, i) => (
-            <button key={i} onClick={() => goTo(i)} className={`h-px transition-all duration-300 ${i === current ? 'w-8 bg-gold' : 'w-4 bg-cream/30'}`} />
-          ))}
-        </div>
-        <button onClick={next} className="w-10 h-10 border border-cream/20 hover:border-gold flex items-center justify-center text-cream/60 hover:text-gold transition-all">
-          <Icons.ChevronRight size={18} />
-        </button>
-      </div>
-
-      {/* Scroll cue */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-cream/20 animate-bounce z-10">
-        <span className="text-[9px] tracking-widest uppercase">Scroll</span>
-        <div className="w-px h-8 bg-gradient-to-b from-cream/20 to-transparent" />
+      {/* ── Dot indicators only (no arrows, no scroll) ── */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+        {HERO_SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`rounded-full transition-all duration-300 ${i === current
+              ? 'w-6 h-1.5 bg-gold'
+              : 'w-1.5 h-1.5 bg-cream/30 hover:bg-cream/60'
+              }`}
+          />
+        ))}
       </div>
     </section>
   );
