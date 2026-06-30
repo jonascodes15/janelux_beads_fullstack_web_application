@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
+import NewsletterPopup from './NewsletterPopup';
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -18,6 +19,8 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      {/* Shows automatically after 5 seconds, once per visitor per 7 days */}
+      <NewsletterPopup />
     </div>
   );
 }

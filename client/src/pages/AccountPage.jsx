@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Icons } from '../components/common/Icons';
@@ -180,6 +180,203 @@ export function WishlistPage() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────
+// ABOUT PAGE IMAGE ARRAYS — add your hosted URLs here
+// ─────────────────────────────────────────────────────────────────
+
+// Hero background carousel (full-width behind the title)
+// Recommended: wide landscape images, 1440×900px or larger
+const ABOUT_HERO_IMAGES = [
+  'https://i.ibb.co/nqfwcx0J/IMG-2353.png',
+  'https://i.ibb.co/0R21XGns/IMG-2355.png',
+  'https://i.ibb.co/p6hqL9hj/IMG-2354.png',
+];
+
+// Side image carousel (left column next to the story text)
+// Recommended: portrait or square images, min 600×800px
+const ABOUT_SIDE_IMAGES = [
+  'https://i.ibb.co/7xYtG1wy/IMG-2359.png',
+  'https://i.ibb.co/23CP7NDK/IMG-2360.png',
+  // 'https://i.ibb.co/xxxx/team.jpg',
+];
+
+// Animated counter hook
+function useCountUp(target, duration = 1800, suffix = '') {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    let startTime = null;
+    const step = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [started, target, duration]);
+
+  return { count, ref };
+}
+
+function AnimatedStat({ target, suffix, label }) {
+  const { count, ref } = useCountUp(target);
+  return (
+    <div ref={ref} className="bg-obsidian-light border border-obsidian-border p-3 sm:p-6 text-center">
+      <div className="font-display text-2xl sm:text-4xl md:text-5xl text-gold">
+        {count}{suffix}
+      </div>
+      <div className="text-cream/50 text-[9px] sm:text-xs tracking-wider sm:tracking-widest uppercase mt-1 sm:mt-2 leading-tight">{label}</div>
+    </div>
+  );
+}
+
+function AboutImageCarousel({ images, className = '', aspect = 'aspect-[4/5]' }) {
+  const [idx, setIdx] = useState(0);
+  const hasImages = images.length > 0;
+
+  useEffect(() => {
+    if (!hasImages || images.length < 2) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % images.length), 4500);
+    return () => clearInterval(t);
+  }, [hasImages, images.length]);
+
+  if (!hasImages) {
+    // Decorative placeholder
+    return (
+      <div className={`relative ${aspect} bg-obsidian-light border border-obsidian-border overflow-hidden ${className}`}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg viewBox="0 0 300 300" className="w-2/3 opacity-15">
+            <defs>
+              <linearGradient id="pg1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#E8C06A" /><stop offset="100%" stopColor="#A07828" />
+              </linearGradient>
+            </defs>
+            {[...Array(8)].map((_, i) => (
+              <circle key={i} cx="150" cy="150" r={20 + i * 18} fill="none" stroke="url(#pg1)" strokeWidth="1" opacity={0.8 - i * 0.08} />
+            ))}
+            {[...Array(16)].map((_, i) => {
+              const angle = (i / 16) * Math.PI * 2;
+              return <circle key={i} cx={150 + Math.cos(angle) * 120} cy={150 + Math.sin(angle) * 120} r="5" fill="url(#pg1)" />;
+            })}
+          </svg>
+        </div>
+        <div className="absolute bottom-6 left-6">
+          <p className="font-display text-5xl text-gold/20 tracking-widest">JB</p>
+        </div>
+        <div className="absolute inset-0 flex items-end justify-center pb-8">
+          <p className="text-cream/20 text-[10px] tracking-widest uppercase text-center px-4">
+            Add image URLs to<br />ABOUT_SIDE_IMAGES
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${aspect} bg-obsidian overflow-hidden ${className}`}>
+      {images.map((src, i) => (
+        <img
+          key={i}
+          src={src}
+          alt={`Janelux Beads story ${i + 1}`}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{ opacity: i === idx ? 1 : 0 }}
+        />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-t from-obsidian/50 via-transparent to-transparent pointer-events-none" />
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIdx(i)}
+              className={`rounded-full transition-all duration-300 ${i === idx ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-cream/40 hover:bg-cream/70'
+                }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AboutHero() {
+  const [idx, setIdx] = useState(0);
+  const hasImages = ABOUT_HERO_IMAGES.length > 0;
+
+  useEffect(() => {
+    if (!hasImages || ABOUT_HERO_IMAGES.length < 2) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % ABOUT_HERO_IMAGES.length), 5000);
+    return () => clearInterval(t);
+  }, [hasImages]);
+
+  return (
+    <div className="relative min-h-[50vh] flex items-end overflow-hidden bg-obsidian">
+      {/* Background images */}
+      {hasImages ? (
+        ABOUT_HERO_IMAGES.map((src, i) => (
+          <div key={i} className="absolute inset-0 transition-opacity duration-700" style={{ opacity: i === idx ? 1 : 0 }}>
+            <img src={src} alt="" className="w-full h-full object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-r from-obsidian/80 via-obsidian/50 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-obsidian to-transparent" />
+          </div>
+        ))
+      ) : (
+        /* No images yet — just a rich dark gradient */
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1A0F00] via-obsidian to-obsidian">
+          <div className="absolute inset-0 opacity-5">
+            <svg width="100%" height="100%"><defs><pattern id="ab" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+              <circle cx="20" cy="20" r="3" fill="#C9993F" /><circle cx="0" cy="0" r="2" fill="#C9993F" />
+              <circle cx="40" cy="0" r="2" fill="#C9993F" /><circle cx="0" cy="40" r="2" fill="#C9993F" /><circle cx="40" cy="40" r="2" fill="#C9993F" />
+            </pattern></defs><rect width="100%" height="100%" fill="url(#ab)" /></svg>
+          </div>
+        </div>
+      )}
+
+      {/* Gold top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+
+      {/* Hero text */}
+      <div className="relative z-10 px-4 md:px-12 py-16 max-w-screen-xl mx-auto w-full">
+        <span className="section-label">Our Story</span>
+        <h1 className="font-display text-5xl md:text-7xl text-cream tracking-wide leading-none mb-4">
+          CRAFTED WITH<br />LOVE & PURPOSE
+        </h1>
+        <p className="font-serif italic text-cream/70 text-lg md:text-xl max-w-xl">
+          "Every bead I string carries the spirit of my ancestors and the dreams of modern African women."
+        </p>
+      </div>
+
+      {/* Dot indicators */}
+      {hasImages && ABOUT_HERO_IMAGES.length > 1 && (
+        <div className="absolute bottom-6 right-8 flex gap-1.5 z-10">
+          {ABOUT_HERO_IMAGES.map((_, i) => (
+            <button key={i} onClick={() => setIdx(i)}
+              className={`rounded-full transition-all duration-300 ${i === idx ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-cream/30 hover:bg-cream/60'}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AboutPage() {
   return (
     <>
@@ -187,26 +384,38 @@ export function AboutPage() {
         <title>About Us — Janelux Beads</title>
         <meta name="description" content="The story of Janelux Beads — handcrafted luxury bead accessories celebrating African heritage." />
       </Helmet>
+
+      {/* Hero with optional background carousel */}
+      <AboutHero />
+
+      {/* Main content */}
       <div className="max-w-screen-xl mx-auto px-4 py-16">
-        <div className="max-w-3xl">
-          <span className="section-label">Our Story</span>
-          <h1 className="font-display text-5xl md:text-7xl text-cream tracking-wide leading-none mb-6">CRAFTED WITH<br />LOVE & PURPOSE</h1>
-          <div className="gold-divider" />
-          <p className="font-serif italic text-cream/70 text-xl leading-relaxed mb-6">
-            "Every bead I string carries the spirit of my ancestors and the dreams of modern African women."
-          </p>
-          <div className="space-y-4 text-cream/60 text-sm leading-relaxed">
-            <p>Janelux Beads was founded by Esther, a passionate artisan from Lagos, Nigeria, with a vision to bring the beauty of handcrafted African bead work to the world. What began as a hobby — learning from her grandmother how to string beads — has grown into a luxury brand celebrated across Nigeria and beyond.</p>
-            <p>Each piece in the Janelux Beads collection is handcrafted, meaning no two are ever exactly alike. This is by design. We believe in the uniqueness of every woman who wears our pieces, and we create accessories that reflect that individuality.</p>
-            <p>Our materials are carefully sourced, our techniques are traditional, and our designs are contemporary — a fusion that represents the best of African heritage meeting modern luxury.</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-12">
-            {[{ num: '500+', label: 'Happy Customers' }, { num: '100%', label: 'Handcrafted' }, { num: '8', label: 'Collections' }].map(s => (
-              <div key={s.label} className="bg-obsidian-light border border-obsidian-border p-6 text-center">
-                <div className="font-display text-4xl text-gold">{s.num}</div>
-                <div className="text-cream/50 text-xs tracking-widest uppercase mt-1">{s.label}</div>
-              </div>
-            ))}
+        <div className="grid md:grid-cols-2 gap-12 items-start">
+
+          {/* Left — side image carousel */}
+          <AboutImageCarousel images={ABOUT_SIDE_IMAGES} aspect="aspect-[4/5]" className="md:sticky md:top-24" />
+
+          {/* Right — story text */}
+          <div>
+            <div className="gold-divider" />
+            <div className="space-y-4 text-cream/60 text-sm leading-relaxed mb-12">
+              <p>Janelux Beads was founded by Esther, a passionate artisan from Lagos, Nigeria, with a vision to bring the beauty of handcrafted African bead work to the world. What began as a hobby — learning from her grandmother how to string beads — has grown into a luxury brand celebrated across Nigeria and beyond.</p>
+              <p>Each piece in the Janelux Beads collection is handcrafted, meaning no two are ever exactly alike. This is by design. We believe in the uniqueness of every woman who wears our pieces, and we create accessories that reflect that individuality.</p>
+              <p>Our materials are carefully sourced, our techniques are traditional, and our designs are contemporary — a fusion that represents the best of African heritage meeting modern luxury.</p>
+            </div>
+
+            {/* Animated stats */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <AnimatedStat target={500} suffix="+" label="Happy Customers" />
+              <AnimatedStat target={100} suffix="%" label="Handcrafted" />
+              <AnimatedStat target={8} suffix="" label="Collections" />
+            </div>
+
+            <div className="mt-10">
+              <Link to="/shop" className="btn-gold inline-flex items-center gap-2">
+                Shop the Collection <Icons.ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
