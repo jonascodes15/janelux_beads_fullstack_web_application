@@ -2,14 +2,19 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const sharp = require('sharp');
-const path = require('path');
-const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const { createClient } = require('@supabase/supabase-js');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 
-const uploadsDir = path.join(__dirname, '../uploads/products');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+// Supabase client — uses service role key so it can write to storage
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
+const BUCKET = 'product-images';
+
+// Store file in memory — we process with sharp before uploading
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
@@ -21,29 +26,46 @@ const upload = multer({
   },
 });
 
-// POST /api/upload/product-image
+async function uploadToSupabase(buffer, filename) {
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .upload(filename, buffer, {
+      contentType: 'image/webp',
+      upsert: false,
+    });
+
+  if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+
+  // Get the public URL
+  const { data: urlData } = supabase.storage
+    .from(BUCKET)
+    .getPublicUrl(filename);
+
+  return urlData.publicUrl;
+}
+
+// POST /api/upload/product-image — single image
 router.post('/product-image', authenticate, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No image uploaded' });
 
     const filename = `${uuidv4()}.webp`;
-    const outputPath = path.join(uploadsDir, filename);
+    const originalSize = req.file.size;
 
     // Compress and convert to WebP
-    await sharp(req.file.buffer)
+    const compressed = await sharp(req.file.buffer)
       .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 82 })
-      .toFile(outputPath);
+      .toBuffer();
 
-    const stats = fs.statSync(outputPath);
-    const originalSize = req.file.size;
-    const compressedSize = stats.size;
+    const compressedSize = compressed.length;
     const reduction = Math.round((1 - compressedSize / originalSize) * 100);
 
-    const imageUrl = `/uploads/products/${filename}`;
+    const publicUrl = await uploadToSupabase(compressed, filename);
+
     res.json({
       success: true,
-      url: imageUrl,
+      url: publicUrl,
       original_size: originalSize,
       compressed_size: compressedSize,
       reduction_percent: reduction,
@@ -54,24 +76,28 @@ router.post('/product-image', authenticate, requireAdmin, upload.single('image')
   }
 });
 
-// POST /api/upload/multiple (up to 5 images)
+// POST /api/upload/multiple — up to 5 images
 router.post('/multiple', authenticate, requireAdmin, upload.array('images', 5), async (req, res) => {
   try {
-    if (!req.files || !req.files.length) return res.status(400).json({ success: false, message: 'No images uploaded' });
+    if (!req.files || !req.files.length) {
+      return res.status(400).json({ success: false, message: 'No images uploaded' });
+    }
 
     const urls = [];
     for (const file of req.files) {
       const filename = `${uuidv4()}.webp`;
-      const outputPath = path.join(uploadsDir, filename);
-      await sharp(file.buffer)
+      const compressed = await sharp(file.buffer)
         .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 82 })
-        .toFile(outputPath);
-      urls.push(`/uploads/products/${filename}`);
+        .toBuffer();
+
+      const publicUrl = await uploadToSupabase(compressed, filename);
+      urls.push(publicUrl);
     }
 
     res.json({ success: true, urls });
   } catch (err) {
+    console.error('Upload error:', err);
     res.status(500).json({ success: false, message: 'Upload failed: ' + err.message });
   }
 });

@@ -1,7 +1,8 @@
+require('dotenv').config();
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM || 'noreply@janeluxbeads.com';
+const FROM = process.env.EMAIL_FROM;
 
 const baseTemplate = (content) => `
 <!DOCTYPE html>
